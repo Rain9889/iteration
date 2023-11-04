@@ -480,6 +480,119 @@ SD as inputs.</p>
 ##    &lt;dbl&gt;     &lt;dbl&gt;
 ## 1   5.14     0.436</code></pre>
 </div>
+<div id="revisiting-past-examples" class="section level3">
+<h3>Revisiting past examples</h3>
+<p>Loading LoTR data</p>
+<pre class="r"><code>fellowship_ring = readxl::read_excel(&quot;./data/LotR_Words.xlsx&quot;, range = &quot;B3:D6&quot;) |&gt;
+  mutate(movie = &quot;fellowship_ring&quot;)
+
+two_towers = readxl::read_excel(&quot;./data/LotR_Words.xlsx&quot;, range = &quot;F3:H6&quot;) |&gt;
+  mutate(movie = &quot;two_towers&quot;)
+
+return_king = readxl::read_excel(&quot;./data/LotR_Words.xlsx&quot;, range = &quot;J3:L6&quot;) |&gt;
+  mutate(movie = &quot;return_king&quot;)
+
+lotr_tidy = bind_rows(fellowship_ring, two_towers, return_king) |&gt;
+  janitor::clean_names() |&gt;
+  pivot_longer(
+    female:male,
+    names_to = &quot;sex&quot;,
+    values_to = &quot;words&quot;) |&gt; 
+  mutate(race = str_to_lower(race)) |&gt; 
+  select(movie, everything())</code></pre>
+<p>Make a function to recreate the tidied LoTR dataset!</p>
+<pre class="r"><code>lotr_load_and_tidy = function(path, range, movie_name) {
+  
+  df = 
+    readxl::read_excel(path, range = range) |&gt;
+    janitor::clean_names() |&gt;
+    pivot_longer(
+      female:male,
+      names_to = &quot;sex&quot;,
+      values_to = &quot;words&quot;) |&gt;
+    mutate(
+      race = str_to_lower(race),
+      movie = movie_name) |&gt; 
+    select(movie, everything())
+  
+  df
+  
+}
+
+lotr_tidy = 
+  bind_rows(
+    lotr_load_and_tidy(&quot;data/LotR_Words.xlsx&quot;, &quot;B3:D6&quot;, &quot;fellowship_ring&quot;),
+    lotr_load_and_tidy(&quot;data/LotR_Words.xlsx&quot;, &quot;F3:H6&quot;, &quot;two_towers&quot;),
+    lotr_load_and_tidy(&quot;data/LotR_Words.xlsx&quot;, &quot;J3:L6&quot;, &quot;return_king&quot;))</code></pre>
+<p>NSDUH</p>
+<pre class="r"><code>nsduh_url = &quot;http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm&quot;
+
+nsduh_html = read_html(nsduh_url)
+
+data_marj = 
+  nsduh_html |&gt; 
+  html_table() |&gt; 
+  nth(1) |&gt;
+  slice(-1) |&gt; 
+  select(-contains(&quot;P Value&quot;)) |&gt;
+  pivot_longer(
+    -State,
+    names_to = &quot;age_year&quot;, 
+    values_to = &quot;percent&quot;) |&gt;
+  separate(age_year, into = c(&quot;age&quot;, &quot;year&quot;), sep = &quot;\\(&quot;) |&gt;
+  mutate(
+    year = str_replace(year, &quot;\\)&quot;, &quot;&quot;),
+    percent = str_replace(percent, &quot;[a-c]$&quot;, &quot;&quot;),
+    percent = as.numeric(percent)) |&gt;
+  filter(!(State %in% c(&quot;Total U.S.&quot;, &quot;Northeast&quot;, &quot;Midwest&quot;, &quot;South&quot;, &quot;West&quot;)))</code></pre>
+<p>Let’s write a quick function to scrape review information for other
+tables on this page</p>
+<pre class="r"><code>nsduh_table &lt;- function(html, table_num, table_name) {
+  
+  table = 
+    html |&gt; 
+    html_table() |&gt; 
+    nth(table_num) |&gt;
+    slice(-1) |&gt; 
+    select(-contains(&quot;P Value&quot;)) |&gt;
+    pivot_longer(
+      -State,
+      names_to = &quot;age_year&quot;, 
+      values_to = &quot;percent&quot;) |&gt;
+    separate(age_year, into = c(&quot;age&quot;, &quot;year&quot;), sep = &quot;\\(&quot;) |&gt;
+    mutate(
+      year = str_replace(year, &quot;\\)&quot;, &quot;&quot;),
+      percent = str_replace(percent, &quot;[a-c]$&quot;, &quot;&quot;),
+      percent = as.numeric(percent),
+      name = table_name) |&gt;
+    filter(!(State %in% c(&quot;Total U.S.&quot;, &quot;Northeast&quot;, &quot;Midwest&quot;, &quot;South&quot;, &quot;West&quot;)))
+}</code></pre>
+<pre class="r"><code>nsduh_url = &quot;http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm&quot;
+
+nsduh_html = read_html(nsduh_url)
+
+nsduh_results = 
+  bind_rows(
+    nsduh_table(nsduh_html, 1, &quot;marj_one_year&quot;),
+    nsduh_table(nsduh_html, 4, &quot;cocaine_one_year&quot;),
+    nsduh_table(nsduh_html, 5, &quot;heroin_one_year&quot;)
+  )</code></pre>
+</div>
+<div id="functions-as-arguments" class="section level3">
+<h3>Functions as arguments</h3>
+<pre class="r"><code>x_vec = rnorm(25, 0, 1)
+
+my_summary = function(x, summ_func) {
+  summ_func(x)
+}
+
+my_summary(x_vec, sd)</code></pre>
+<pre><code>## [1] 1.062626</code></pre>
+<pre class="r"><code>my_summary(x_vec, IQR)</code></pre>
+<pre><code>## [1] 1.28463</code></pre>
+<pre class="r"><code>my_summary(x_vec, var)</code></pre>
+<pre><code>## [1] 1.129174</code></pre>
+</div>
 
 
 
