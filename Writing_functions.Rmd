@@ -1,0 +1,73 @@
+---
+title: "Writing_functions"
+author: "Yuxuan Wang"
+date: "2023-11-04"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+```
+
+Set seed for reproducibility
+
+```{r}
+set.seed(1234)
+```
+
+### Z score function
+
+z scores subbtract the mean and divide by the sd.
+
+```{r}
+x_vec = rnorm(25, mean = 5, sd = 3)
+```
+
+Compute Z score for `x_vec`
+
+```{r}
+(x_vec - mean(x_vec)) / sd(x_vec)
+```
+
+Write a function to do that!
+
+```{r}
+z_scores = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Z scores cannot be computed for length 1 vectors")
+  }
+  
+  z = mean(x) / sd(x)
+  
+  z
+}
+```
+
+Check this works!
+
+```{r}
+z_scores(x = x_vec)
+```
+
+Check this!
+
+```{r, error=TRUE}
+z_scores(3)
+```
+
+```{r, error=TRUE}
+z_scores("my name is jeff")
+```
+
+```{r, error=TRUE}
+z_scores(iris)
+```
+
+```{r, error=TRUE}
+z_scores(sample(c(TRUE, FALSE), 25, replace = TRUE))
+```
+
