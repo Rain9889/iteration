@@ -71,3 +71,70 @@ z_scores(iris)
 z_scores(sample(c(TRUE, FALSE), 25, replace = TRUE))
 ```
 
+### Multiple outputs
+
+Write a function returns the mean and sd from a sample of numbers.
+
+```{r}
+mean_and_sd = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Cannot be computed for length 1 vectors")
+  }
+  
+  mean_x = mean(x)
+  sd_x = sd(x)
+
+  tibble(
+    mean = mean_x, 
+    sd = sd_x
+  )
+}
+```
+
+```{r}
+mean_and_sd(x_vec)
+```
+
+### Multiple inputs
+
+```{r}
+sim_data = tibble(
+  x = rnorm(30, mean = 2, sd = 3)
+)
+
+sim_data |> 
+  summarize(
+    mu_hat = mean(x),
+    sigma_hat = sd(x)
+  )
+```
+
+Let's write a function that uses `n`, a true mean and true SD as inputs. 
+
+```{r}
+sim_mean_sd = function(n, mu = 5, sigma = 1) {
+  
+  sim_data = tibble(
+    x = rnorm(n, mean = mu, sd = sigma),
+  )
+  
+  sim_data |> 
+    summarize(
+      mu_hat = mean(x),
+      sigma_hat = sd(x)
+    )
+}
+```
+
+```{r}
+sim_mean_sd(n = 30, mu = 5, sigma = .5)
+```
+
+```{r}
+sim_mean_sd(30, 5, .5)
+```
+
+

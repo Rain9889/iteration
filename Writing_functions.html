@@ -414,6 +414,72 @@ display: none;
 <pre class="r"><code>z_scores(sample(c(TRUE, FALSE), 25, replace = TRUE))</code></pre>
 <pre><code>## Error in z_scores(sample(c(TRUE, FALSE), 25, replace = TRUE)): Argument x should be numeric</code></pre>
 </div>
+<div id="multiple-outputs" class="section level3">
+<h3>Multiple outputs</h3>
+<p>Write a function returns the mean and sd from a sample of
+numbers.</p>
+<pre class="r"><code>mean_and_sd = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop(&quot;Argument x should be numeric&quot;)
+  } else if (length(x) == 1) {
+    stop(&quot;Cannot be computed for length 1 vectors&quot;)
+  }
+  
+  mean_x = mean(x)
+  sd_x = sd(x)
+
+  tibble(
+    mean = mean_x, 
+    sd = sd_x
+  )
+}</code></pre>
+<pre class="r"><code>mean_and_sd(x_vec)</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  4.27  2.77</code></pre>
+</div>
+<div id="multiple-inputs" class="section level3">
+<h3>Multiple inputs</h3>
+<pre class="r"><code>sim_data = tibble(
+  x = rnorm(30, mean = 2, sd = 3)
+)
+
+sim_data |&gt; 
+  summarize(
+    mu_hat = mean(x),
+    sigma_hat = sd(x)
+  )</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   mu_hat sigma_hat
+##    &lt;dbl&gt;     &lt;dbl&gt;
+## 1   1.72      2.99</code></pre>
+<p>Let’s write a function that uses <code>n</code>, a true mean and true
+SD as inputs.</p>
+<pre class="r"><code>sim_mean_sd = function(n, mu = 5, sigma = 1) {
+  
+  sim_data = tibble(
+    x = rnorm(n, mean = mu, sd = sigma),
+  )
+  
+  sim_data |&gt; 
+    summarize(
+      mu_hat = mean(x),
+      sigma_hat = sd(x)
+    )
+}</code></pre>
+<pre class="r"><code>sim_mean_sd(n = 30, mu = 5, sigma = .5)</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   mu_hat sigma_hat
+##    &lt;dbl&gt;     &lt;dbl&gt;
+## 1   5.15     0.568</code></pre>
+<pre class="r"><code>sim_mean_sd(30, 5, .5)</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   mu_hat sigma_hat
+##    &lt;dbl&gt;     &lt;dbl&gt;
+## 1   5.14     0.436</code></pre>
+</div>
 
 
 
